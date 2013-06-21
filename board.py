@@ -1,4 +1,6 @@
 from collections import deque
+import movementTools as MV
+
 
 '''
 A game of checkers
@@ -16,55 +18,37 @@ The eventual goal is to be able to swap out AIs
 
 '''
 
-nullToken = -1
-redToken = 1
-redKingToken = 11
-blackToken = 2
-blackKingToken = 22
-staleToken = 0
-
-boardSize = 8 
-
-def red(board, pos):
-    if board[pos] == redToken or board[pos] == redKingToken:
-        return True
-    return False
-
-def black(board, pos):
-    if board[pos] == blackToken or board[pos] == blackKingToken:
-        return True
-    return False
 
 def newBoard():
-    board =  [blackToken,blackToken,blackToken,blackToken,\
-              blackToken,blackToken,blackToken,blackToken,\
-              blackToken,blackToken,blackToken,blackToken,\
-              nullToken,nullToken,nullToken,nullToken,\
-              nullToken,nullToken,nullToken,nullToken,\
-              redToken,redToken,redToken,redToken,\
-              redToken,redToken,redToken,redToken,\
-              redToken,redToken,redToken,redToken]
+    board =  [MV.blackToken,MV.blackToken,MV.blackToken,MV.blackToken,\
+              MV.blackToken,MV.blackToken,MV.blackToken,MV.blackToken,\
+              MV.blackToken,MV.blackToken,MV.blackToken,MV.blackToken,\
+              MV.nullToken,MV.nullToken,MV.nullToken,MV.nullToken,\
+              MV.nullToken,MV.nullToken,MV.nullToken,MV.nullToken,\
+              MV.redToken,MV.redToken,MV.redToken,MV.redToken,\
+              MV.redToken,MV.redToken,MV.redToken,MV.redToken,\
+              MV.redToken,MV.redToken,MV.redToken,MV.redToken]
     return board
 
 def showBoard(board):
     line = ""
-    for i in range(boardSize*boardSize):
+    for i in range(64):
         line = line + '|'
-        if ((i%2 != 0) if ((i/boardSize)%2 == 0) else (i%2 == 0)) :
-            if board[i/2] == nullToken:
+        if ((i%2 != 0) if ((i/8)%2 == 0) else (i%2 == 0)) :
+            if board[i/2] == MV.nullToken:
                 line = line + '-'
-            elif board[i/2] == redToken:
+            elif board[i/2] == MV.redToken:
                 line = line + 'r'
-            elif board[i/2] == redKingToken:
+            elif board[i/2] == MV.redKingToken:
                 line = line + 'R'
-            elif board[i/2] == blackToken:
+            elif board[i/2] == MV.blackToken:
                 line = line + 'b'
-            elif board[i/2] == blackKingToken:
+            elif board[i/2] == MV.blackKingToken:
                 line = line + 'B'
         else:
             line = line + '~'
 
-        if i%boardSize == boardSize - 1:
+        if i%8 == 7:
             print line
             line = ""
 
@@ -79,31 +63,31 @@ def moveRedPiece(board, move):
     '''
     move = deque(move)
     piece = board[move[0]]
-    isKing = True if piece == redKingToken else False
+    isKing = True if piece == MV.redKingToken else False
 
-    if not red(board, move[0]):
+    if not MV.red(board, move[0]):
         raise Exception, 'Moving a red piece in the black move function'
-    if board[move[1]] != nullToken:
+    if board[move[1]] != MV.nullToken:
         raise Exception, 'Moving to an occupied space'
     if move[1] > 31:
         raise Exception, 'Moving off the board'
     if move[1] < 0:
         raise Exception, 'Moving off the board'
 
-    simpleDests = enumerateSimpleMovesRed(move[0])
+    simpleDests = MV.enumerateSimpleMovesRed(move[0])
     if isKing:
-        simpleDests = simpleDests | enumerateSimpleMovesBlack(move[0])
+        simpleDests = simpleDests | MV.enumerateSimpleMovesBlack(move[0])
 
     if move[1] in simpleDests:
-        if jumpPossibleRed(board, move[0]) or (isKing and jumpPossibleBlack(board, move[0], True)):
+        if MV.jumpPossibleRed(board, move[0]) or (isKing and MV.jumpPossibleBlack(board, move[0], True)):
             raise Exception, 'must jump if able'
         board[move[1]] = piece
-        board[move[0]] = nullToken
+        board[move[0]] = MV.nullToken
     else:
         while len(move) > 1:
-            jumpDests = enumerateJumpMovesRed(move[0])
+            jumpDests = MV.enumerateJumpMovesRed(move[0])
             if isKing:
-                jumpDests = jumpDests | enumerateJumpMovesBlack(move[0])
+                jumpDests = jumpDests | MV.enumerateJumpMovesBlack(move[0])
 
             if move[1] not in jumpDests:
                 raise Exception, 'Invalid:  move is not on the list of valid moves' 
@@ -130,16 +114,16 @@ def moveRedPiece(board, move):
                    blackPos = move[0] + (4 - ((move[0]/4)%2) + 1)
 
 
-            if not black(board, blackPos):
+            if not MV.black(board, blackPos):
                 raise Exception, 'Attempting to jump over a black nor empty square'
             else:
-                board[blackPos] = nullToken
+                board[blackPos] = MV.nullToken
             board[move[1]] = piece
-            board[move[0]] = nullToken
+            board[move[0]] = MV.nullToken
             move.popleft()
 
 
-        if jumpPossibleRed(board, move[0]) or (isKing and jumpPossibleBlack(board, move[0], True)):
+        if MV.jumpPossibleRed(board, move[0]) or (isKing and MV.jumpPossibleBlack(board, move[0], True)):
             raise Exception, 'must jump complete chain, jumps are still possible'
 
 
@@ -153,31 +137,31 @@ def moveBlackPiece(board, move):
     '''
     move = deque(move)
     piece = board[move[0]]
-    isKing = True if piece == blackKingToken else False
+    isKing = True if piece == MV.blackKingToken else False
 
     if not black(board, move[0]):
         raise Exception, 'Moving a red piece in the black move function'
-    if board[move[1]] != nullToken:
+    if board[move[1]] != MV.nullToken:
         raise Exception, 'Moving to an occupied space'
     if move[1] > 31:
         raise Exception, 'Moving off the board'
     if move[1] < 0:
         raise Exception, 'Moving off the board'
 
-    simpleDests = enumerateSimpleMovesBlack(move[0])
+    simpleDests = MV.enumerateSimpleMovesBlack(move[0])
     if isKing:
-        simpleDests = simpleDests | enumerateSimpleMovesRed(move[0])
+        simpleDests = simpleDests | MV.enumerateSimpleMovesRed(move[0])
 
     if move[1] in simpleDests:
-        if jumpPossibleBlack(board, move[0]) or (isKing and jumpPossibleRed(board, move[0], True)):
+        if MV.jumpPossibleBlack(board, move[0]) or (isKing and MV.jumpPossibleRed(board, move[0], True)):
             raise Exception, 'must jump if able'
         board[move[1]] = piece
-        board[move[0]] = nullToken
+        board[move[0]] = MV.nullToken
     else:
         while len(move) > 1:
-            jumpDests = enumerateJumpMovesBlack(move[0])
+            jumpDests = MV.enumerateJumpMovesBlack(move[0])
             if isKing:
-                jumpDests = jumpDests | enumerateJumpMovesRed(move[0])
+                jumpDests = jumpDests | MV.enumerateJumpMovesRed(move[0])
 
             if move[1] not in jumpDests:
                 raise Exception, 'Invalid:  move is not on the list of valid moves' 
@@ -204,156 +188,25 @@ def moveBlackPiece(board, move):
                     redPos = move[0] - (3 + ((move[0]/4)%2))
 
 
-            if not red(board, redPos):
+            if not MV.red(board, redPos):
                 raise Exception, 'Attempting to jump over a black nor empty square'
             else:
-                board[redPos] = nullToken
+                board[redPos] = MV.nullToken
             board[move[1]] = piece
-            board[move[0]] = nullToken
+            board[move[0]] = MV.nullToken
             move.popleft()
 
 
-        if jumpPossibleBlack(board, move[0]) or (isKing and jumpPossibleRed(board, move[0], True)):
+        if MV.jumpPossibleBlack(board, move[0]) or (isKing and MV.jumpPossibleRed(board, move[0], True)):
             raise Exception, 'must jump complete chain, jumps are still possible'
 
-def enumerateSimpleMovesBlack(start):
-    '''returns all the valid simple movements from position start as a set'''
-    '''assumes travel towards the red side of the board'''
-    #These are the possible moves if we aren't jumping
-    nonjumpPlaces = [] 
-    #To the left
-    if (start/4)%2 == 0 or start%4 != 0:
-        simpLeft = start + (4 - ((start/4)%2))
-        if simpLeft < 32:
-            nonjumpPlaces.append(simpLeft)
-
-    #To the right
-    if (start/4)%2 != 0 or start%4 != 3:
-        simpRight = start + (4 - ((start/4)%2)) + 1
-        if simpRight < 32:
-            nonjumpPlaces.append(simpRight)
-
-    return set(nonjumpPlaces)
-
-def enumerateSimpleMovesRed(start):
-    '''returns all the valid simple movements from position start as a set'''
-    '''assumes travel towards the black side of the board'''
-    #These are the possible moves if we aren't jumping
-    nonjumpPlaces = [] 
-    #To the left
-    if (start/4)%2 == 0 or start%4 != 0:
-        simpLeft = start - (3 + ((start/4)%2) + 1)
-        if simpLeft >= 0:
-            nonjumpPlaces.append(simpLeft)
-
-    #To the right
-    if (start/4)%2 != 0 or start%4 != 3:
-        simpRight = start - (3 + ((start/4)%2))
-        if simpRight >= 0:
-            nonjumpPlaces.append(simpRight)
-
-    return set(nonjumpPlaces)
-
-def enumerateJumpMovesBlack(start):
-    '''returns all jumps possible from a position, without considering if a red peice is in place to be jumped over'''
-    '''assumes travel towards the red side of the board'''
-    jumpPlaces = []
-
-    #To the left
-    if start%4 != 0 and start + 7 < 32:
-        jumpPlaces.append(start + 7)
-    #To the right
-    if start%4 != 3 and start + 9 < 32:
-        jumpPlaces.append(start + 9)
-
-    return set(jumpPlaces)
-
-def enumerateJumpMovesRed(start):
-    '''returns all jumps possible from a position, without considering if a red peice is in place to be jumped over'''
-    '''assumes travel towards the black side of the board'''
-    jumpPlaces = []
-
-    #To the left
-    if start%4 != 0 and start - 9 >= 0:
-        jumpPlaces.append(start - 9)
-    #To the right
-    if start%4 != 3 and start - 7 >= 0:
-        jumpPlaces.append(start - 7)
-
-    return set(jumpPlaces)
-
-def jumpPossibleBlack(board, start, isRedKing = False):
-    '''Given the current situation on the board, returns whether a jump is possible from position start. It assumes that there is a black tile on start'''
-    '''isRedKing will be True if this fcn is being called for a red king'''
-    simpLeft = -1
-    simpRight = -1
-    #To the left
-    if (start/4)%2 == 0 or start%4 != 0:
-        simpLeft = start + (4 - ((start/4)%2))
-        if simpLeft > 31:
-            simpLeft = -1
-
-    #To the right
-    if (start/4)%2 != 0 or start%4 != 3:
-        simpRight = start + (4 - ((start/4)%2)) + 1
-        if simpRight > 31:
-            simpRight = -1
-    
-
-    jumpLeft = -1 
-    jumpRight = -1
-    #To the left
-    if start%4 != 0 and start + 7 < 32:
-        jumpLeft = (start + 7)
-    #To the right
-    if start%4 != 3 and start + 9 < 32:
-        jumpRight = (start + 9)
-
-    if (simpLeft != -1 and jumpLeft != -1 and board[jumpLeft] == nullToken and (black(board, simpLeft) if isRedKing else red(board, simpLeft))) \
-       or (simpRight != -1 and jumpRight != -1 and board[jumpRight] == nullToken and (black(board, simpRight) if isRedKing else red(board, simpRight))):
-        return True
-
-    return False
-
-def jumpPossibleRed(board, start, isBlackKing = False):
-    '''Given the current situation on the board, returns whether a jump is possible from position start. It assumes that there is a red tile on start'''
-    '''isRedKing will be True if this fcn is being called for a red king'''
-    simpLeft = -1
-    simpRight = -1
-    #To the left
-    if (start/4)%2 == 0 or start%4 != 0:
-        simpLeft = start - (3 + ((start/4)%2) + 1)
-        if simpLeft < 0:
-            simpLeft = -1
-
-    #To the right
-    if (start/4)%2 != 0 or start%4 != 3:
-        simpRight = start - (3 + ((start/4)%2))
-        if simpRight < 0:
-            simpRight = -1
-    
-
-    jumpLeft = -1 
-    jumpRight = -1
-    #To the left
-    if start%4 != 0 and start - 9 >= 0:
-        jumpLeft = (start - 9)
-    #To the right
-    if start%4 != 3 and start - 7 >= 0:
-        jumpRight = (start - 7)
-
-    if (simpLeft != -1 and jumpLeft != -1 and board[jumpLeft] == nullToken and (red(board, simpLeft) if isBlackKing else black(board, simpLeft))) \
-       or (simpRight != -1 and jumpRight != -1 and board[jumpRight] == nullToken and (red(board, simpRight) if isBlackKing else black(board, simpRight))):
-        return True
-
-    return False
 
 
 if __name__ == "__main__":
     board = newBoard()
-    board[17] = blackKingToken
-    board[6] = nullToken
-    board[22] = redKingToken
+    board[17] = MV.blackKingToken
+    board[6] = MV.nullToken
+    board[22] = MV.redKingToken
     moveRedPiece(board,[22,13,6,15])
     '''
     for i in range(32):
