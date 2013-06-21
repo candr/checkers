@@ -151,3 +151,58 @@ def jumpPossibleRed(board, start, isBlackKing = False):
         return True
 
     return False
+
+def jumpIsValidRed(start, end, board, isKing = False):
+    #going left
+    if end + 8 == start-1:
+	blackPos = start - (3 + ((start/4)%2) + 1)
+
+    #going right
+    if end + 8 == start+1:
+	blackPos = start - (3 + ((start/4)%2))
+
+    if isKing:
+	#Going left
+	if end - 8 == start-1:
+	   blackPos = start + (4 - ((start/4)%2))
+
+	#Going Right
+	if end - 8 == start+1:
+	   blackPos = start + (4 - ((start/4)%2) + 1)
+
+
+    if isKing and not red(board, blackPos):
+	return False
+    if not isKing and not black(board, blackPos):
+	return False
+    else:
+	return True
+	
+	
+def jumpIsValidBlack(start, end, board, isKing = False):
+    #Going left
+    if end - 8 == start-1:
+       redPos = start + (4 - ((start/4)%2))
+
+    #Going Right
+    if end - 8 == start+1:
+       redPos = start + (4 - ((start/4)%2) + 1)
+
+    if isKing:
+	#going left
+	if end + 8 == start-1:
+	    redPos = start - (3 + ((start/4)%2) + 1)
+
+	#going right
+	if end + 8 == start+1:
+	    redPos = start - (3 + ((start/4)%2))
+
+
+    if isKing and not black(board, redPos):
+	return False
+    if not isKing and not red(board, redPos):
+	return False
+    else:
+	return True
+
+

@@ -95,7 +95,7 @@ def moveRedPiece(board, move):
                 raise Exception, 'Moving off the board'
             if move[1] < 0:
                 raise Exception, 'Moving off the board'
-
+	    '''
             #going left
             if move[1] + 8 == move[0]-1:
                 blackPos = move[0] - (3 + ((move[0]/4)%2) + 1)
@@ -113,11 +113,14 @@ def moveRedPiece(board, move):
                 if move[1] - 8 == move[0]+1:
                    blackPos = move[0] + (4 - ((move[0]/4)%2) + 1)
 
-
-            if not MV.black(board, blackPos):
-                raise Exception, 'Attempting to jump over a black nor empty square'
-            else:
+	    '''
+		
+            #if not MV.black(board, blackPos):
+            if MV.jumpIsValidRed(move[0], move[1], board) or \
+	       (isKing and MV.jumpIsValidBlack(move[0], move[1], board, True):
                 board[blackPos] = MV.nullToken
+            else:
+                raise Exception, 'Attempting to jump over a black nor empty square'
             board[move[1]] = piece
             board[move[0]] = MV.nullToken
             move.popleft()
