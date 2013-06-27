@@ -246,3 +246,12 @@ def buildJumpTreeRed(start, board, sequence, isKing = False):
 
 	return jumps
 
+def allPossibleMovesRed(board):
+	moves = []
+	for i in range(32):
+		if board[i] == redToken:
+			moves.append([i])
+		elif board[i] == redKingToken:
+			moves.append([i])
+	
+	return moves
