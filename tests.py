@@ -173,6 +173,22 @@ def testKingSimpleBlack():
 
 	print MV.allPossibleMovesBlack(b)
 
+def testEndConditionI():
+	b = [MV.nullToken for i in range(32)]
+	print MV.allPossibleMovesBlack(b)
+
+def testEndConditionII():
+	b = [MV.nullToken for i in range(32)]
+	print MV.allPossibleMovesRed(b)
+
+def testEndConditionIII():
+	b = [MV.nullToken for i in range(32)]
+	b[0] = MV.redToken
+	b[4] = MV.blackToken
+	b[5] = MV.blackToken
+	b[9] = MV.blackToken
+	print MV.allPossibleMovesRed(b)
+
 if __name__ == "__main__":
 	testGenerator = False
 	if testGenerator:
@@ -188,7 +204,7 @@ if __name__ == "__main__":
 		testSimpleMoveEnumerator()
 		testJumpMoveEnumerator()
 
-	testAllMove = True
+	testAllMove = False
 	if testAllMove:
 		testAllMovesRed()
 		testKingSimpleBlack()
@@ -198,3 +214,9 @@ if __name__ == "__main__":
 	if testLoop:
 		loopTestI()
 		loopTestII()
+
+	testEndCondition = True
+	if testEndCondition:
+		testEndConditionI()
+		testEndConditionII()
+		testEndConditionIII()

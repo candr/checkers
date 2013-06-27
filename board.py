@@ -81,6 +81,9 @@ def moveRedPiece(board, move):
     if move[1] in simpleDests:
         if MV.jumpPossibleRed(board, move[0]) or (isKing and MV.jumpPossibleBlack(board, move[0], True)):
             raise Exception, 'must jump if able'
+	#if it gets to the last row
+	if move[1] in range(4):
+	    piece = MV.redKingToken
         board[move[1]] = piece
         board[move[0]] = MV.nullToken
     else:
@@ -102,6 +105,10 @@ def moveRedPiece(board, move):
                 board[blackPos] = MV.nullToken
             else:
                 raise Exception, 'Attempting to jump over a red or empty square'
+	    #if it gets to the last row
+	    if move[1] in range(4):
+	        piece = MV.redKingToken
+                isKing = True
             board[move[1]] = piece
             board[move[0]] = MV.nullToken
             move.popleft()
@@ -109,6 +116,7 @@ def moveRedPiece(board, move):
 
         if MV.jumpPossibleRed(board, move[0]) or (isKing and MV.jumpPossibleBlack(board, move[0], True)):
             raise Exception, 'must jump complete chain, jumps are still possible'
+    	
 
 
 def moveBlackPiece(board, move):
@@ -123,7 +131,7 @@ def moveBlackPiece(board, move):
     piece = board[move[0]]
     isKing = True if piece == MV.blackKingToken else False
 
-    if not black(board, move[0]):
+    if not MV.black(board, move[0]):
         raise Exception, 'Moving a red piece in the black move function'
     if board[move[1]] != MV.nullToken:
         raise Exception, 'Moving to an occupied space'
@@ -139,6 +147,9 @@ def moveBlackPiece(board, move):
     if move[1] in simpleDests:
         if MV.jumpPossibleBlack(board, move[0]) or (isKing and MV.jumpPossibleRed(board, move[0], True)):
             raise Exception, 'must jump if able'
+	#if it gets to the last row
+	if move[1] in range(28,32):
+	    piece = MV.blackKingToken
         board[move[1]] = piece
         board[move[0]] = MV.nullToken
     else:
@@ -160,6 +171,10 @@ def moveBlackPiece(board, move):
                 board[redPos] = MV.nullToken
             else:
                 raise Exception, 'Attempting to jump over a black or empty square'
+	    #if it gets to the last row
+	    if move[1] in range(28,32):
+	        piece = MV.blackKingToken
+                isKing = True
             board[move[1]] = piece
             board[move[0]] = MV.nullToken
             move.popleft()
@@ -169,24 +184,27 @@ def moveBlackPiece(board, move):
             raise Exception, 'must jump complete chain, jumps are still possible'
 
 
-
 if __name__ == "__main__":
     board = newBoard()
-    board[17] = MV.blackKingToken
-    board[6] = MV.nullToken
-    board[22] = MV.redKingToken
-    moveRedPiece(board,[22,13,6,15])
-    '''
-    for i in range(32):
-        s = 'moves from ' + repr(i + 1) + ' are '
-        #m = enumerateSimpleMovesBlack(i)
-        #m = enumerateJumpMovesBlack(i)
-        #m = enumerateSimpleMovesRed(i)
-        #m = enumerateJumpMovesRed(i)
-        while(len(m) > 0):
-            s = s + repr(m.pop()+ 1) + ', '
-        print s
-    '''
-    showBoard(board)
-
-
+    redTurn = False 
+    while(True):
+        showBoard(board)
+	if redTurn:
+		moveList = MV.allPossibleMovesRed(board)
+		if len(moveList) == 0:
+			print "Black wins"
+			break
+		moves = {x: moveList[x] for x in range(len(moveList))} 
+		print moves
+		moveSelected = input("Select a move\n")
+		moveRedPiece(board, moves[moveSelected])
+        else:
+		moveList = MV.allPossibleMovesBlack(board)
+		if len(moveList) == 0:
+			print "Red wins"
+			break
+		moves = {x: moveList[x] for x in range(len(moveList))} 
+		print moves
+		moveSelected = input("Select a move\n")
+		moveBlackPiece(board, moves[moveSelected])
+        redTurn = not redTurn
