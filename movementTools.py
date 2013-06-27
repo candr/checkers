@@ -217,41 +217,106 @@ def jumpIsValidBlack(start, end, board, isKing = False):
 def buildJumpTreeBlack(start, board, sequence, isKing = False):
 	seq = copy.copy(sequence)
 	seq.append(start)
-	jumpsValid = [x for x in enumerateJumpMovesBlack(start) if jumpIsValidBlack(start, x, board, False) and x not in set(seq)]
+	jumpsValid = [x for x in enumerateJumpMovesBlack(start) if jumpIsValidBlack(start, x, board, False)]
 	if isKing:
-		jumpsValid.extend([x for x in enumerateJumpMovesRed(start) if jumpIsValidBlack(start, x, board, True) and x not in set(seq)])
+		jumpsValid.extend([x for x in enumerateJumpMovesRed(start) if jumpIsValidBlack(start, x, board, True)])
 
 	if len(jumpsValid) == 0:
 		return [seq]
 	
 	jumps = []
-	for i in range(len(jumpsValid)):
-		jumps.extend(buildJumpTreeRed(jumpsValid[i], board, seq, isKing))
+	for end in jumpsValid:
+		blackPos = jumpIsValidBlack(start, end, board, isKing)
+		b = copy.copy(board)
+		b[end] = (blackKingToken if isKing else blackToken)
+		b[start] = nullToken
+		b[blackPos] = nullToken 
+		jumps.extend(buildJumpTreeBlack(end, b, seq, isKing))
 
 	return jumps
 
 def buildJumpTreeRed(start, board, sequence, isKing = False):
 	seq = copy.copy(sequence)
 	seq.append(start)
-	jumpsValid = [x for x in enumerateJumpMovesRed(start) if jumpIsValidRed(start, x, board, False) and x not in set(seq)]
+	jumpsValid = [x for x in enumerateJumpMovesRed(start) if jumpIsValidRed(start, x, board, False) ]
 	if isKing:
-		jumpsValid.extend([x for x in enumerateJumpMovesBlack(start) if jumpIsValidRed(start, x, board, True) and x not in set(seq)])
+		jumpsValid.extend([x for x in enumerateJumpMovesBlack(start) if jumpIsValidRed(start, x, board, True)])
 
 	if len(jumpsValid) == 0:
 		return [seq]
 	
 	jumps = []
-	for i in range(len(jumpsValid)):
-		jumps.extend(buildJumpTreeRed(jumpsValid[i], board, seq, isKing))
+	for end in jumpsValid:
+		blackPos = jumpIsValidRed(start, end, board, isKing)
+		b = copy.copy(board)
+		b[end] = (redKingToken if isKing else redToken)
+		b[start] = nullToken
+		b[blackPos] = nullToken 
+		jumps.extend(buildJumpTreeRed(end, b, seq, isKing))
 
 	return jumps
 
+def jumpTreeRed(start, board, isKing = False):
+	return buildJumpTreeRed(start, board, [], isKing)
+
+def jumpTreeBlack(start, board, isKing = False):
+	return buildJumpTreeBlack(start, board, [], isKing)
+
 def allPossibleMovesRed(board):
-	moves = []
+	simpleMoves = []
+	jumpMoves = []
+	jumping = False
 	for i in range(32):
 		if board[i] == redToken:
-			moves.append([i])
+			if jumpPossibleRed(board, i):
+				jumpMoves.extend(jumpTreeRed(i, board))
+				jumping = True
+			else:	
+				moves = enumerateSimpleMovesRed(i)
+				for j in moves:
+					if board[j] == nullToken:
+						simpleMoves.append([i,j])
 		elif board[i] == redKingToken:
-			moves.append([i])
-	
-	return moves
+			if jumpPossibleRed(board, i) or jumpPossibleBlack(board, i, isRedKing = True):
+				jumpMoves.extend(jumpTreeRed(i, board, True))
+				jumping = True
+			else:
+				moves = enumerateSimpleMovesRed(i)
+				moves = moves | enumerateSimpleMovesBlack(i)
+				for j in moves:
+					if board[j] == nullToken:
+						simpleMoves.append([i,j])
+	if jumping:
+		return jumpMoves
+	else:
+		return simpleMoves
+
+
+def allPossibleMovesBlack(board):
+	simpleMoves = []
+	jumpMoves = []
+	jumping = False
+	for i in range(32):
+		if board[i] == blackToken:
+			if jumpPossibleBlack(board, i):
+				jumpMoves.extend(jumpTreeBlack(i, board))
+				jumping = True
+			else:	
+				moves = enumerateSimpleMovesBlack(i)
+				for j in moves:
+					if board[j] == nullToken:
+						simpleMoves.append([i,j])
+		elif board[i] == blackKingToken:
+			if jumpPossibleBlack(board, i) or jumpPossibleRed(board, i, isBlackKing = True):
+				jumpMoves.extend(jumpTreeBlack(i, board, True))
+				jumping = True
+			else:
+				moves = enumerateSimpleMovesBlack(i)
+				moves = moves | enumerateSimpleMovesRed(i)
+				for j in moves:
+					if board[j] == nullToken:
+						simpleMoves.append([i,j])
+	if jumping:
+		return jumpMoves
+	else:
+		return simpleMoves
