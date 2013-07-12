@@ -1,6 +1,17 @@
 from collections import deque
 import movementTools as MV
+import pygame, sys
+from pygame.locals import *
 
+BLACK = (0,0,0)
+WHITE = (255,255,255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
+CELLSIZE = 50
+PEICERAD = 20
+BOARDOFFSET = 10
 
 '''
 A game of checkers
@@ -184,8 +195,34 @@ def moveBlackPiece(board, move):
             raise Exception, 'must jump complete chain, jumps are still possible'
 
 
+def initGUI():
+    pygame.init()
+    pygame.display.set_caption('Checkers')
+    return pygame.display.set_mode((500, 500), 0, 32)
+
+def drawBoardGUI(DISPLAYSURF, board):
+    DISPLAYSURF.fill(WHITE)
+    pygame.draw.rect(DISPLAYSURF, RED, (BOARDOFFSET, BOARDOFFSET, CELLSIZE * 8, CELLSIZE * 8))
+    for i in range(8):
+        for j in range(4):
+            x = 2*j*CELLSIZE + ((i+1)%2)*CELLSIZE + BOARDOFFSET
+            y = i * CELLSIZE + BOARDOFFSET
+            pygame.draw.rect(DISPLAYSURF, BLUE, (x, y, CELLSIZE, CELLSIZE))
+            if board[i*4 + j] != MV.nullToken:
+                x += CELLSIZE/2
+                y += CELLSIZE/2
+                if board[i*4 + j] == MV.blackToken:
+                    pygame.draw.circle(DISPLAYSURF, BLACK, (x, y), PEICERAD)
+                if board[i*4 + j] == MV.redToken:
+                    pygame.draw.circle(DISPLAYSURF, RED, (x, y), PEICERAD)
+    
+    
+    pygame.display.update()
+
 if __name__ == "__main__":
+    DIS = initGUI()
     board = newBoard()
+    drawBoardGUI(DIS, board)
     redTurn = False 
     while(True):
         showBoard(board)
