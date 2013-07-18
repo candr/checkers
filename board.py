@@ -11,7 +11,8 @@ BLUE = (0, 0, 255)
 
 CELLSIZE = 50
 PEICERAD = 20
-BOARDOFFSET = 10
+
+boardOffset = (10,10)
 
 '''
 A game of checkers
@@ -202,11 +203,11 @@ def initGUI():
 
 def drawBoardGUI(DISPLAYSURF, board):
     DISPLAYSURF.fill(WHITE)
-    pygame.draw.rect(DISPLAYSURF, RED, (BOARDOFFSET, BOARDOFFSET, CELLSIZE * 8, CELLSIZE * 8))
+    pygame.draw.rect(DISPLAYSURF, RED, (boardOffset[0], boardOffset[1], CELLSIZE * 8, CELLSIZE * 8))
     for i in range(8):
         for j in range(4):
-            x = 2*j*CELLSIZE + ((i+1)%2)*CELLSIZE + BOARDOFFSET
-            y = i * CELLSIZE + BOARDOFFSET
+            x = 2*j*CELLSIZE + ((i+1)%2)*CELLSIZE + boardOffset[0]
+            y = i * CELLSIZE + boardOffset[1]
             pygame.draw.rect(DISPLAYSURF, BLUE, (x, y, CELLSIZE, CELLSIZE))
             if board[i*4 + j] != MV.nullToken:
                 x += CELLSIZE/2
@@ -218,6 +219,35 @@ def drawBoardGUI(DISPLAYSURF, board):
     
     
     pygame.display.update()
+
+def selectPeice(pos, offset):
+    gridNum = (((pos[1]-offset[1])/CELLSIZE)*8) + (pos[0]-offset[0])/CELLSIZE
+    oddRow = (gridNum/8)%2
+
+    if gridNum%2 != oddRow:
+        return gridNum/2
+    else:
+        return None
+
+class human:
+    def __init__(self, isRed):
+        self.isRed = isRed
+        self.firstSelected = None
+
+'''Eventually turn this one into the makeMove fcn
+   builds a move, one jump at a time.
+   when the move is complete, return it
+   if we press a cell outside the move, start from the beginning
+    if we hit a button outside the board, do it's action'''
+    def selectedCell(self):
+        for event in pygame.event.get(MOUSEBUTTONDOWN):
+            cellNum = selectPeice(event.pos, boardOffset)
+            if cellNum != None:
+                if self.firstSelected == None:
+                    self.firstSelected = cellNum
+                else:
+                    self.firstSelected = None
+
 
 if __name__ == "__main__":
     DIS = initGUI()
@@ -231,11 +261,11 @@ if __name__ == "__main__":
 		if len(moveList) == 0:
 			print "Black wins"
 			break
-		moves = {x: moveList[x] for x in range(len(moveList))} 
-		print moves
-		moveSelected = input("Select a move\n")
-		moveRedPiece(board, moves[moveSelected])
-        else:
+		#moves = {x: moveList[x] for x in range(len(moveList))} 
+        move = humanMoveRed(board)
+        if move != None: 
+		    moveRedPiece(board, moves[moveSelected])
+    else:
 		moveList = MV.allPossibleMovesBlack(board)
 		if len(moveList) == 0:
 			print "Red wins"
@@ -244,4 +274,4 @@ if __name__ == "__main__":
 		print moves
 		moveSelected = input("Select a move\n")
 		moveBlackPiece(board, moves[moveSelected])
-        redTurn = not redTurn
+    redTurn = not redTurn
