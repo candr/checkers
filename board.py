@@ -6,13 +6,14 @@ from pygame.locals import *
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+GREEN = (34, 139, 34)
+HGREEN = (105, 205, 50)
+BROWN = (205, 170, 125)
 
 CELLSIZE = 50
 PEICERAD = 20
 
-boardOffset = (10,10)
+boardOffset = {'x':10, 'y':10}
 
 '''
 A game of checkers
@@ -203,12 +204,12 @@ def initGUI():
 
 def drawBoardGUI(DISPLAYSURF, board):
     DISPLAYSURF.fill(WHITE)
-    pygame.draw.rect(DISPLAYSURF, RED, (boardOffset[0], boardOffset[1], CELLSIZE * 8, CELLSIZE * 8))
+    pygame.draw.rect(DISPLAYSURF, BROWN, (boardOffset['x'],  boardOffset['y'], CELLSIZE * 8, CELLSIZE * 8))
     for i in range(8):
         for j in range(4):
-            x = 2*j*CELLSIZE + ((i+1)%2)*CELLSIZE + boardOffset[0]
-            y = i * CELLSIZE + boardOffset[1]
-            pygame.draw.rect(DISPLAYSURF, BLUE, (x, y, CELLSIZE, CELLSIZE))
+            x = 2*j*CELLSIZE + ((i+1)%2)*CELLSIZE + boardOffset['x']
+            y = i * CELLSIZE + boardOffset['y']
+            pygame.draw.rect(DISPLAYSURF, GREEN, (x, y, CELLSIZE, CELLSIZE))
             if board[i*4 + j] != MV.nullToken:
                 x += CELLSIZE/2
                 y += CELLSIZE/2
@@ -218,10 +219,9 @@ def drawBoardGUI(DISPLAYSURF, board):
                     pygame.draw.circle(DISPLAYSURF, RED, (x, y), PEICERAD)
     
     
-    pygame.display.update()
 
-def selectPeice(pos, offset):
-    gridNum = (((pos[1]-offset[1])/CELLSIZE)*8) + (pos[0]-offset[0])/CELLSIZE
+def convertPosToCell(pos, offset):
+    gridNum = (((pos[1]-offset['y'])/CELLSIZE)*8) + (pos[0]-offset['x'])/CELLSIZE
     oddRow = (gridNum/8)%2
 
     if gridNum%2 != oddRow:
@@ -229,49 +229,93 @@ def selectPeice(pos, offset):
     else:
         return None
 
+def convertCellToPos(cell, offset):
+    x = cell%4 * 2
+    y = (cell*2)/8
+
+    evenRow = (y+1)%2
+
+    x = (x + evenRow) * CELLSIZE + offset['x']
+    y = y * CELLSIZE + offset['y']
+
+    return {'x':x, 'y':y}
+
+def selectingBoard(pos, offset):
+    if pos[1] > offset['y'] and \
+       pos[0] > offset['x'] and \
+       pos[1] < 8 * CELLSIZE + offset['y'] and \
+       pos[0] < 8 * CELLSIZE + offset['x']:
+           return True
+
+    return False
+
 class human:
     def __init__(self, isRed):
         self.isRed = isRed
-        self.firstSelected = None
+        self.move = []
 
-'''Eventually turn this one into the makeMove fcn
-   builds a move, one jump at a time.
-   when the move is complete, return it
-   if we press a cell outside the move, start from the beginning
-    if we hit a button outside the board, do it's action'''
-    def selectedCell(self):
+    def selectCell(self):
         for event in pygame.event.get(MOUSEBUTTONDOWN):
-            cellNum = selectPeice(event.pos, boardOffset)
-            if cellNum != None:
-                if self.firstSelected == None:
-                    self.firstSelected = cellNum
-                else:
-                    self.firstSelected = None
+            if selectingBoard(event.pos, boardOffset):
+                cell = convertPosToCell(event.pos, boardOffset)
+                if cell != None:
+                    self.move.append(cell)
+
+    def getMove(self):
+        return self.move
+
+
+def highlightMove(DISPLAYSURF, board, move):
+    for cell in move:
+        pos = convertCellToPos(cell, boardOffset)
+        pygame.draw.rect(DISPLAYSURF, HGREEN, (pos['x'], pos['y'], CELLSIZE, CELLSIZE))
+        if board[cell] != MV.nullToken:
+            x = pos['x'] + CELLSIZE/2
+            y = pos['y'] + CELLSIZE/2
+            if board[cell] == MV.blackToken:
+                pygame.draw.circle(DISPLAYSURF, BLACK, (x, y), PEICERAD)
+            if board[cell] == MV.redToken:
+                pygame.draw.circle(DISPLAYSURF, RED, (x, y), PEICERAD)
+
+
 
 
 if __name__ == "__main__":
     DIS = initGUI()
+    pygame.event.set_allowed(None)
+    pygame.event.set_allowed([QUIT, MOUSEBUTTONDOWN])
     board = newBoard()
-    drawBoardGUI(DIS, board)
     redTurn = False 
+    red = human(True)
+    black = human(False)
     while(True):
-        showBoard(board)
-	if redTurn:
-		moveList = MV.allPossibleMovesRed(board)
-		if len(moveList) == 0:
-			print "Black wins"
-			break
-		#moves = {x: moveList[x] for x in range(len(moveList))} 
-        move = humanMoveRed(board)
-        if move != None: 
-		    moveRedPiece(board, moves[moveSelected])
-    else:
-		moveList = MV.allPossibleMovesBlack(board)
-		if len(moveList) == 0:
-			print "Red wins"
-			break
-		moves = {x: moveList[x] for x in range(len(moveList))} 
-		print moves
-		moveSelected = input("Select a move\n")
-		moveBlackPiece(board, moves[moveSelected])
-    redTurn = not redTurn
+        drawBoardGUI(DIS, board)
+        red.selectCell()
+        move = red.getMove()
+        highlightMove(DIS, board, move)
+        pygame.display.update()
+        for event in pygame.event.get(QUIT):
+			pygame.quit()
+			sys.exit()
+
+
+        '''
+        if redTurn:
+            moveList = MV.allPossibleMovesRed(board)
+            if len(moveList) == 0:
+                print "Black wins"
+                break
+            move = humanMoveRed(board)
+            if move != None: 
+                moveRedPiece(board, moves[moveSelected])
+        else:
+            moveList = MV.allPossibleMovesBlack(board)
+            if len(moveList) == 0:
+                print "Red wins"
+                break
+            moves = {x: moveList[x] for x in range(len(moveList))} 
+            print moves
+            moveSelected = input("Select a move\n")
+            moveBlackPiece(board, moves[moveSelected])
+        redTurn = not redTurn
+        '''
