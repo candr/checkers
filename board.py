@@ -9,6 +9,7 @@ RED = (255, 0, 0)
 GREEN = (34, 139, 34)
 HGREEN = (105, 205, 50)
 BROWN = (205, 170, 125)
+DGRBLUE = (28, 134, 238)
 
 CELLSIZE = 50
 PEICERAD = 20
@@ -277,6 +278,19 @@ def highlightMove(DISPLAYSURF, board, move):
             if board[cell] == MV.redToken:
                 pygame.draw.circle(DISPLAYSURF, RED, (x, y), PEICERAD)
 
+def showAllMovesGUI(DISPLAYSURF, moveList):
+    for move in moveList:
+        start = None
+        for cell in move:
+            pos = convertCellToPos(cell, boardOffset)
+            pos['x'] += CELLSIZE/2
+            pos['y'] += CELLSIZE/2
+
+            if start == None:
+                start = pos
+            else:
+                pygame.draw.line(DISPLAYSURF, DGRBLUE, (start['x'], start['y']), (pos['x'], pos['y']), 2)
+                start = pos
 
 
 
@@ -293,6 +307,8 @@ if __name__ == "__main__":
         red.selectCell()
         move = red.getMove()
         highlightMove(DIS, board, move)
+        moveList = MV.allPossibleMovesBlack(board)
+        showAllMovesGUI(DIS, moveList)
         pygame.display.update()
         for event in pygame.event.get(QUIT):
 			pygame.quit()
