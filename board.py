@@ -203,23 +203,26 @@ def initGUI():
     pygame.display.set_caption('Checkers')
     return pygame.display.set_mode((500, 500), 0, 32)
 
-def drawBoardGUI(DISPLAYSURF, board):
+def drawBoardGUI(DISPLAYSURF, offset):
     DISPLAYSURF.fill(WHITE)
-    pygame.draw.rect(DISPLAYSURF, BROWN, (boardOffset['x'],  boardOffset['y'], CELLSIZE * 8, CELLSIZE * 8))
+    pygame.draw.rect(DISPLAYSURF, BROWN, (offset['x'],  offset['y'], CELLSIZE * 8, CELLSIZE * 8))
     for i in range(8):
         for j in range(4):
-            x = 2*j*CELLSIZE + ((i+1)%2)*CELLSIZE + boardOffset['x']
-            y = i * CELLSIZE + boardOffset['y']
+            x = 2*j*CELLSIZE + ((i+1)%2)*CELLSIZE + offset['x']
+            y = i * CELLSIZE + offset['y']
             pygame.draw.rect(DISPLAYSURF, GREEN, (x, y, CELLSIZE, CELLSIZE))
-            if board[i*4 + j] != MV.nullToken:
-                x += CELLSIZE/2
-                y += CELLSIZE/2
-                if board[i*4 + j] == MV.blackToken:
-                    pygame.draw.circle(DISPLAYSURF, BLACK, (x, y), PEICERAD)
-                if board[i*4 + j] == MV.redToken:
-                    pygame.draw.circle(DISPLAYSURF, RED, (x, y), PEICERAD)
     
     
+def drawPeicesGUI(DISPLAYSURF, board, offset):
+    for i in range(32):
+        if board[i] != MV.nullToken:
+            pos = convertCellToPos(i, offset)
+            pos['x'] += CELLSIZE/2
+            pos['y'] += CELLSIZE/2
+            if board[i] == MV.blackToken:
+                pygame.draw.circle(DISPLAYSURF, BLACK, (pos['x'], pos['y']), PEICERAD)
+            if board[i] == MV.redToken:
+                pygame.draw.circle(DISPLAYSURF, RED, (pos['x'], pos['y']), PEICERAD)
 
 def convertPosToCell(pos, offset):
     gridNum = (((pos[1]-offset['y'])/CELLSIZE)*8) + (pos[0]-offset['x'])/CELLSIZE
@@ -255,10 +258,10 @@ class human:
         self.isRed = isRed
         self.move = []
 
-    def selectCell(self):
+    def selectCell(self, offset):
         for event in pygame.event.get(MOUSEBUTTONDOWN):
-            if selectingBoard(event.pos, boardOffset):
-                cell = convertPosToCell(event.pos, boardOffset)
+            if selectingBoard(event.pos, offset):
+                cell = convertPosToCell(event.pos, offset)
                 if cell != None:
                     self.move.append(cell)
 
@@ -266,30 +269,34 @@ class human:
         return self.move
 
 
-def highlightMove(DISPLAYSURF, board, move):
+def highlightMove(DISPLAYSURF, board, move, offset):
     for cell in move:
-        pos = convertCellToPos(cell, boardOffset)
+        pos = convertCellToPos(cell, offset)
         pygame.draw.rect(DISPLAYSURF, HGREEN, (pos['x'], pos['y'], CELLSIZE, CELLSIZE))
-        if board[cell] != MV.nullToken:
-            x = pos['x'] + CELLSIZE/2
-            y = pos['y'] + CELLSIZE/2
-            if board[cell] == MV.blackToken:
-                pygame.draw.circle(DISPLAYSURF, BLACK, (x, y), PEICERAD)
-            if board[cell] == MV.redToken:
-                pygame.draw.circle(DISPLAYSURF, RED, (x, y), PEICERAD)
 
-def showAllMovesGUI(DISPLAYSURF, moveList):
+def showAllMovesGUI(DISPLAYSURF, moveList, offset):
     for move in moveList:
         start = None
+
+        spos = convertCellToPos(move[0], offset)
+        spos['x'] += CELLSIZE/2
+        spos['y'] += CELLSIZE/2
+        pygame.draw.circle(DISPLAYSURF, DGRBLUE, (spos['x'], spos['y']), CELLSIZE/6)
+
+        epos = convertCellToPos(move[-1], offset)
+        epos['x'] += CELLSIZE/2
+        epos['y'] += CELLSIZE/2
+        pygame.draw.circle(DISPLAYSURF, DGRBLUE, (epos['x'], epos['y']), CELLSIZE/6)
+    
         for cell in move:
-            pos = convertCellToPos(cell, boardOffset)
+            pos = convertCellToPos(cell, offset)
             pos['x'] += CELLSIZE/2
             pos['y'] += CELLSIZE/2
 
             if start == None:
                 start = pos
             else:
-                pygame.draw.line(DISPLAYSURF, DGRBLUE, (start['x'], start['y']), (pos['x'], pos['y']), 2)
+                pygame.draw.line(DISPLAYSURF, DGRBLUE, (start['x'], start['y']), (pos['x'], pos['y']), 6)
                 start = pos
 
 
@@ -303,12 +310,13 @@ if __name__ == "__main__":
     red = human(True)
     black = human(False)
     while(True):
-        drawBoardGUI(DIS, board)
-        red.selectCell()
+        drawBoardGUI(DIS, boardOffset)
+        red.selectCell(boardOffset)
         move = red.getMove()
-        highlightMove(DIS, board, move)
+        highlightMove(DIS, board, move, boardOffset)
+        drawPeicesGUI(DIS, board, boardOffset)
         moveList = MV.allPossibleMovesBlack(board)
-        showAllMovesGUI(DIS, moveList)
+        showAllMovesGUI(DIS, moveList, boardOffset)
         pygame.display.update()
         for event in pygame.event.get(QUIT):
 			pygame.quit()
