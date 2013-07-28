@@ -5,6 +5,7 @@ from pygame.locals import *
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
+GREY = (160,160,160)
 RED = (255, 0, 0)
 GREEN = (34, 139, 34)
 HGREEN = (105, 205, 50)
@@ -199,10 +200,10 @@ def moveBlackPiece(board, move):
 def initGUI():
     pygame.init()
     pygame.display.set_caption('Checkers')
-    return pygame.display.set_mode((500, 500), 0, 32)
+    return pygame.display.set_mode((490, 420), 0, 32)
 
 def drawBoardGUI(DISPLAYSURF, offset):
-    DISPLAYSURF.fill(WHITE)
+    DISPLAYSURF.fill(GREY)
     pygame.draw.rect(DISPLAYSURF, BROWN, (offset['x'],  offset['y'], CELLSIZE * 8, CELLSIZE * 8))
     for i in range(8):
         for j in range(4):
@@ -336,6 +337,36 @@ def showAllMovesGUI(DISPLAYSURF, moveList, offset):
                 pygame.draw.line(DISPLAYSURF, DGRBLUE, (start['x'], start['y']), (pos['x'], pos['y']), 6)
                 start = pos
 
+class timer:
+    def __init__(self, limit, rect):
+        self.limit = limit
+        self.elapsed = limit
+        self.clock = pygame.time.get_ticks()
+        self.rect = rect
+        self.x = rect[0]
+        self.y = rect[1]
+        self.l = rect[2]
+        self.h = rect[3]
+
+    def timeUp(self, DISPLAYSURF):
+        done = False
+        self.clock = pygame.time.get_ticks() - self.clock
+        self.elapsed -= self.clock
+        if self.elapsed <= 0:
+            done = True
+            self.elapsed = self.limit
+        self.clock = pygame.time.get_ticks()
+
+        pygame.draw.rect(DISPLAYSURF, GREEN, self.rect)
+        pygame.draw.rect(DISPLAYSURF, RED, (self.x, self.y, self.l, self.elapsed/float(self.limit) * self.h))
+
+        return done
+
+    def reset(self, DISPLAYSURF):
+        self.elapsed = self.limit
+        self.clock = pygame.time.get_ticks()
+        pygame.draw.rect(DISPLAYSURF, RED, self.rect)
+
 
 
 if __name__ == "__main__":
@@ -346,8 +377,11 @@ if __name__ == "__main__":
     redTurn = False 
     red = human(True)
     black = human(False)
+    time = timer(10000, (430, 10, 60, 400))
     while(True):
         drawBoardGUI(DIS, boardOffset)
+        if time.timeUp(DIS):
+            redTurn = not redTurn
         if redTurn:
             moveList = MV.allPossibleMovesRed(board)
             if len(moveList) == 0:
@@ -359,6 +393,7 @@ if __name__ == "__main__":
             if move != None:
                 moveRedPiece(board, move)
                 redTurn = not redTurn
+                time.reset(DIS)
             else:
                 move = red.getPartialMove()
                 highlightMove(DIS, board, move, boardOffset)
@@ -375,6 +410,7 @@ if __name__ == "__main__":
             if move != None:
                 moveBlackPiece(board, move)
                 redTurn = not redTurn
+                time.reset(DIS)
             else:
                 move = black.getPartialMove()
                 highlightMove(DIS, board, move, boardOffset)
